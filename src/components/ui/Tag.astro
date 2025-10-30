@@ -1,0 +1,42 @@
+---
+interface Props {
+  tag: string
+  clickable?: boolean
+  count?: number
+}
+
+const { tag, clickable = true, count } = Astro.props
+---
+
+{
+  clickable ? (
+    <a href={`/tag/${tag}/`} class="tag">
+      #{tag}{count !== undefined && <span class="count"> ({count})</span>}
+    </a>
+  ) : (
+    <span class="tag">#{tag}{count !== undefined && <span class="count"> ({count})</span>}</span>
+  )
+}
+
+<style>
+  .tag {
+    display: inline-block;
+    padding: 0.25rem 0.625rem 0.25rem 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: all 0.15s ease-out;
+    letter-spacing: 0.01em;
+  }
+
+  a.tag:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+  }
+
+  .count {
+    color: var(--text-tertiary);
+  }
+</style>

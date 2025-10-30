@@ -1,6 +1,7 @@
 ---
 title: 'Theme Guide'
 pubDate: '2025-07-10'
+tags: documentation, astro, tutorial, guide
 ---
 
 Chiri is a minimal blog theme built with [Astro](https://astro.build), offering customization options while preserving its clean aesthetic.

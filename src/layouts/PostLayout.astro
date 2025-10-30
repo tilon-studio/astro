@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer.astro'
 import BackButton from '@/components/ui/BackButton.astro'
 import TableOfContents from '@/components/ui/TableOfContents.astro'
 import GradientMask from '@/components/ui/GradientMask.astro'
+import Tag from '@/components/ui/Tag.astro'
 import ImageOptimizer from '@/components/ui/ImageOptimizer.astro'
 import ImageViewer from '@/components/ui/ImageViewer.astro'
 import GitHubCard from '@/components/ui/GitHubCard.astro'
@@ -19,7 +20,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 
 import { themeConfig } from '@/config'
 
-const { title, pubDate, readingTime, toc } = Astro.props as PostLayoutProps
+const { title, pubDate, tags, readingTime, toc } = Astro.props as PostLayoutProps
 
 const postSlug = Astro.url.pathname.split('/').filter(Boolean).pop() || ''
 const ogImage = `/open-graph/${postSlug}.png`
@@ -55,6 +56,15 @@ const ogImage = `/open-graph/${postSlug}.png`
               )
             }
           </div>
+          {
+            tags && tags.length > 0 && (
+              <div class="tags">
+                {tags.map((tag) => (
+                  <Tag tag={tag} />
+                ))}
+              </div>
+            )
+          }
         </div>
         <slot />
       </div>
@@ -80,5 +90,15 @@ const ogImage = `/open-graph/${postSlug}.png`
 
   .post-container main {
     flex: 1;
+  }
+</style>
+
+<style is:global>
+  .post-container .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    row-gap: 0;
+    margin-top: 0.75rem;
   }
 </style>
