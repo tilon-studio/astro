@@ -22,7 +22,7 @@
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Static assets - build output
+# Static assets - build output (includes CSS, JS, images with hashed names)
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
@@ -30,19 +30,42 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# CSS and JS
+# SVG files
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+# Font files
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ttf
+  Cache-Control: public, max-age=31536000, immutable
+
+# CSS and JS (at root level)
 /*.css
   Cache-Control: public, max-age=31536000, immutable
 
 /*.js
   Cache-Control: public, max-age=31536000, immutable
 
-# Images
+# Images (at root level)
 /*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpeg
   Cache-Control: public, max-age=31536000, immutable
 
 /*.png
   Cache-Control: public, max-age=31536000, immutable
 
 /*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.gif
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ico
   Cache-Control: public, max-age=31536000, immutable
