@@ -1,4 +1,5 @@
 import type { TOCItem, ReadingTime } from './content.types'
+import type { CollectionEntry } from 'astro:content'
 
 // TOC component props interface
 export interface TOCProps {
@@ -13,6 +14,7 @@ export interface PostLayoutProps {
   tags?: string[]
   readingTime?: ReadingTime
   toc?: TOCItem[]
+  relatedPosts?: CollectionEntry<'posts'>[]
 }
 
 // Transition props interface

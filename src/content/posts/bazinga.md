@@ -1,7 +1,7 @@
 ---
 title: Bazinga
 pubDate: '2025-10-29'
-tags: writing, literature, podcasts, scriptwriting, reference
+tags: writing, reference, history, culture
 ---
 
 # Master Index: World-Class Scriptwriting Examples for Podcasts

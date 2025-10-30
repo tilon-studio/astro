@@ -17,10 +17,11 @@ import NeoDBCard from '@/components/ui/NeoDBCard.astro'
 import XPOST from '@/components/ui/XPOST.astro'
 import CopyCode from '@/components/ui/CopyCode.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import PostList from '@/components/widgets/PostList.astro'
 
 import { themeConfig } from '@/config'
 
-const { title, pubDate, tags, readingTime, toc } = Astro.props as PostLayoutProps
+const { title, pubDate, tags, readingTime, toc, relatedPosts } = Astro.props as PostLayoutProps
 
 const postSlug = Astro.url.pathname.split('/').filter(Boolean).pop() || ''
 const ogImage = `/open-graph/${postSlug}.png`
@@ -68,6 +69,13 @@ const ogImage = `/open-graph/${postSlug}.png`
         </div>
         <slot />
       </div>
+      {
+        relatedPosts && relatedPosts.length > 0 && (
+          <div class="related-posts">
+            <PostList posts={relatedPosts} />
+          </div>
+        )
+      }
     </main>
     <ImageOptimizer />
     <FootnoteScroll />
@@ -100,5 +108,11 @@ const ogImage = `/open-graph/${postSlug}.png`
     gap: 0.5rem;
     row-gap: 0;
     margin-top: 0.75rem;
+  }
+
+  .related-posts {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
   }
 </style>

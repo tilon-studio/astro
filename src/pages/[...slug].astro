@@ -2,6 +2,7 @@
 import { type CollectionEntry, getCollection } from 'astro:content'
 import PostLayout from '@/layouts/PostLayout.astro'
 import { render } from 'astro:content'
+import { getRelatedPosts } from '@/utils/draft'
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts')
@@ -20,8 +21,9 @@ const { Content, remarkPluginFrontmatter } = await render(post)
 
 const readingTime = remarkPluginFrontmatter.readingTime
 const toc = remarkPluginFrontmatter.toc || []
+const relatedPosts = await getRelatedPosts(post.id, post.data.tags || [], 10)
 ---
 
-<PostLayout {...post.data} readingTime={readingTime} toc={toc}>
+<PostLayout {...post.data} readingTime={readingTime} toc={toc} relatedPosts={relatedPosts}>
   <Content />
 </PostLayout>
