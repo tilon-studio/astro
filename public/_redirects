@@ -1,0 +1,2 @@
+# Redirects for Astro static assets
+/_astro/* /_astro/:splat 200

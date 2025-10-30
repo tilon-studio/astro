@@ -1,31 +1,142 @@
 import { visit } from 'unist-util-visit'
 
 /**
+ * Fetch metadata from a URL at build time
+ */
+async function fetchLinkMetadata(url) {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AstroBot/1.0)'
+      }
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch link metadata for ${url}: ${response.status}`)
+      return null
+    }
+
+    const html = await response.text()
+
+    // Simple regex-based parsing (more reliable than loading a full DOM parser in Node)
+    const getMetaContent = (property, name) => {
+      const patterns = [
+        new RegExp(`<meta\\s+property=["']${property}["']\\s+content=["']([^"']+)["']`, 'i'),
+        new RegExp(`<meta\\s+content=["']([^"']+)["']\\s+property=["']${property}["']`, 'i'),
+        ...(name ? [
+          new RegExp(`<meta\\s+name=["']${name}["']\\s+content=["']([^"']+)["']`, 'i'),
+          new RegExp(`<meta\\s+content=["']([^"']+)["']\\s+name=["']${name}["']`, 'i')
+        ] : [])
+      ]
+
+      for (const pattern of patterns) {
+        const match = html.match(pattern)
+        if (match) return match[1]
+      }
+      return ''
+    }
+
+    const title =
+      getMetaContent('og:title') ||
+      getMetaContent('twitter:title') ||
+      html.match(/<title>([^<]+)<\/title>/i)?.[1] ||
+      ''
+
+    const description =
+      getMetaContent('og:description') ||
+      getMetaContent('twitter:description') ||
+      getMetaContent('', 'description') ||
+      ''
+
+    const image =
+      getMetaContent('og:image') ||
+      getMetaContent('twitter:image') ||
+      ''
+
+    const imageAlt =
+      getMetaContent('og:image:alt') ||
+      title ||
+      ''
+
+    return {
+      title: title.trim(),
+      description: description.trim(),
+      image: image.trim(),
+      imageAlt: imageAlt.trim()
+    }
+  } catch (error) {
+    console.warn(`Error fetching link metadata for ${url}:`, error.message)
+    return null
+  }
+}
+
+/**
+ * Escape HTML special characters
+ */
+function escapeHtml(text) {
+  if (!text) return ''
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+/**
  * A remark plugin that converts custom directives to embedded media HTML elements
  * Supports: link cards, Spotify, YouTube, Bilibili, X posts, and GitHub repository cards
  */
 const embedHandlers = {
-  // Link Card
-  link: (node) => {
+  // Link Card - async handler for build-time metadata fetching
+  link: async (node) => {
     const url = node.attributes?.url
     if (!url) {
       return false
     }
 
-    // Create the LinkCard HTML structure - all metadata will be fetched by JavaScript
+    // Fetch metadata at build time
+    const metadata = await fetchLinkMetadata(url)
+
+    // Extract domain for display
+    let domain = url
+    try {
+      domain = new URL(url).hostname.replace('www.', '')
+    } catch {
+      domain = 'invalid-url'
+    }
+
+    // Build HTML with metadata
+    const hasImage = metadata?.image && metadata.image.trim()
+    const hasTitle = metadata?.title && metadata.title.trim()
+    const hasDescription = metadata?.description && metadata.description.trim()
+
     return `
       <div class="link-card-wrapper">
-        <a href="${url}" class="link-card" target="_blank" rel="noopener noreferrer" data-url="${url}">
+        <a href="${url}" class="link-card" target="_blank" rel="noopener noreferrer">
           <div class="link-card-content">
-            <div class="link-card-url"></div>
-            <p class="link-card-title" style="display: none;"></p>
-            <p class="link-card-description" style="display: none;"></p>
+            <div class="link-card-url">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path>
+              </svg>
+              <span>${escapeHtml(domain)}</span>
+            </div>
+            ${hasTitle ? `<p class="link-card-title">${escapeHtml(metadata.title)}</p>` : ''}
+            ${hasDescription ? `<p class="link-card-description">${escapeHtml(metadata.description)}</p>` : ''}
           </div>
+          ${hasImage ? `
           <div class="link-card-image-outer">
-            <div class="link-card-image" style="display: none;">
-              <img src="" alt="" loading="lazy" />
+            <div class="link-card-image">
+              <img src="${escapeHtml(metadata.image)}" alt="${escapeHtml(metadata.imageAlt || metadata.title || '')}" loading="lazy" />
             </div>
           </div>
+          ` : ''}
         </a>
       </div>
     `
@@ -215,23 +326,30 @@ const embedHandlers = {
 }
 
 export default function remarkEmbeddedMedia() {
-  return (tree) => {
+  return async (tree) => {
+    const promises = []
+
     visit(tree, ['leafDirective', 'containerDirective', 'textDirective'], (node) => {
       const handler = embedHandlers[node.name]
       if (!handler) {
         return
       }
 
-      const htmlContent = handler(node)
-      if (!htmlContent) {
-        return
-      }
+      promises.push(
+        Promise.resolve(handler(node)).then((htmlContent) => {
+          if (!htmlContent) {
+            return
+          }
 
-      node.type = 'html'
-      node.value = htmlContent
-      delete node.name
-      delete node.attributes
-      delete node.children
+          node.type = 'html'
+          node.value = htmlContent
+          delete node.name
+          delete node.attributes
+          delete node.children
+        })
+      )
     })
+
+    await Promise.all(promises)
   }
 }
