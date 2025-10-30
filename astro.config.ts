@@ -36,7 +36,12 @@ export default defineConfig({
       Exclude: [(file) => file.toLowerCase().includes('katex')]
     }),
     mdx(),
-    sitemap()
+    sitemap({
+      filter: (page) => !page.includes('/404'),
+      changefreq: 'weekly',
+      priority: 0.7,
+      lastmod: new Date()
+    })
   ],
   vite: {
     resolve: {
